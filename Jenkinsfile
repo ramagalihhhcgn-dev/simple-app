@@ -1,7 +1,7 @@
 pipeline {
   agent any
   environment {
-    IMAGE_NAME = 'ramagalhh/simple-app'
+  IMAGE_NAME = 'ramagalhh/simple-app'
     REGISTRY = 'https://index.docker.io/v1/'
     REGISTRY_CREDENTIALS = 'dockerhub-credentials'
   }
@@ -13,32 +13,27 @@ pipeline {
     }
     stage('Build') {
       steps {
-        sh 'echo "Mulai build aplikasi"'
+        bat 'echo "Build di Windows"'
       }
     }
     stage('Build Docker Image') {
       steps {
-        script {
-          docker.build("${env.IMAGE_NAME}:${env.BUILD_NUMBER}")
-        }
+        bat """docker build -t ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ."""
       }
     }
     stage('Push Docker Image') {
       steps {
-        script {
-          docker.withRegistry(env.REGISTRY, env.REGISTRY_CREDENTIALS) {
-            def tag = "${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
-            docker.image(tag).push()
-            docker.image(tag).tag('latest')
-            docker.image("${env.IMAGE_NAME}:latest").push()
-          }
+        withCredentials([usernamePassword(credentialsId: env.REGISTRY_CREDENTIALS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+          bat """docker login -u %USER% -p %PASS%"""
+          bat """docker push ${env.IMAGE_NAME}:${env.BUILD_NUMBER}"""
+          bat """docker tag ${env.IMAGE_NAME}:${env.BUILD_NUMBER} ${env.IMAGE_NAME}:latest"""
+          bat """docker push ${env.IMAGE_NAME}:latest"""
         }
       }
     }
   }
-  post {
-    always {
-      echo 'Selesai build'
-    }
-  }
 }
+
+ IMAGE_NAME = 'ramagalhh/simple-app'
+    REGISTRY = 'https://index.docker.io/v1/'
+    REGISTRY_CREDENTIALS = 'dockerhub-credentials'
